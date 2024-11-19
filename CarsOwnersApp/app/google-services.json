@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "76314221864",
+    "project_id": "ownersproject-6959b",
+    "storage_bucket": "ownersproject-6959b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:76314221864:android:823370fd2492682a73041d",
+        "android_client_info": {
+          "package_name": "com.example.carsownersapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCH38Q4C9UJyyPLog03pGf69Lv1mkkY1Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -6,8 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.example.week56test.Models.Product
 import com.example.week56test.Models.ProductRepository
 
-class ProductViewModel()
-    : ViewModel() {
+class ProductViewModel() : ViewModel() {
         var repo = ProductRepository()
 
     val stateList : SnapshotStateList<Product> = mutableStateListOf<Product>().apply {
