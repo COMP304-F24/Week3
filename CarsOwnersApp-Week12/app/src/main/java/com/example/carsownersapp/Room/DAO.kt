@@ -40,11 +40,11 @@ interface OwnerDAO {
     suspend fun deleteOwner(id: Int)
 
     @Transaction
-    @Query("SELECT * FROM Owner , Car WHERE Car.car_ownerID == :id and Car.car_ownerID == Owner.oid")
+    @Query("SELECT * FROM Owner , Car WHERE Car.car_ownerID == :id and Owner.oid == Car.car_ownerID")
     suspend fun getAllCarsForOwner(id: Int): OwnersAndCars
 
 
-
+    @Transaction
     @Query("DELETE FROM Car where car_ownerID == :id ")
     suspend fun deleteAllCarsForOwner(id: Int)
 

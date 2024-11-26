@@ -7,8 +7,6 @@ import com.example.carsownersapp.Room.Owner
 import com.example.carsownersapp.Room.OwnerDAO
 import com.example.carsownersapp.Room.OwnersAndCars
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.ktx.Firebase
-
 
 class AppRepository(private val carsDAO: CarsDAO,
                     private val ownerDAO: OwnerDAO,
@@ -38,6 +36,18 @@ class AppRepository(private val carsDAO: CarsDAO,
         carsDAO.deleteCar(c)
     }
 
+fun deleteFromCloudDB(id: Int){
+    firebaseDB.collection("OwnersCollection").
+    whereEqualTo("oID", id).get().
+    addOnSuccessListener{ documents ->
+        for (document in documents) {
+            Log.d("firebase", "${document.id} => ${document.data}")
+            firebaseDB.collection("OwnersCollection").document(document.id).delete()
+        }
+    }.addOnFailureListener{exception ->
+        Log.w("firebase", "Error getting documents: ", exception)
+    }
+}
 
     fun addOwnerToCloudDB(o:Owner){
         val owner = hashMapOf(
@@ -45,6 +55,7 @@ class AppRepository(private val carsDAO: CarsDAO,
             "YOB" to o.yearOfBirth,
             "oID" to o.oid,
         )
+
 // Add a new document with a generated ID
         firebaseDB.collection("OwnersCollection")
             .add(owner)
@@ -54,7 +65,6 @@ class AppRepository(private val carsDAO: CarsDAO,
             .addOnFailureListener { e ->
                 Log.w("MYAPP", "Error adding document", e)
             }
-
     }
 
 }

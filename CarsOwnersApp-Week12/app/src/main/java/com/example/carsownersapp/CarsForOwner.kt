@@ -54,7 +54,7 @@ class CarsForOwner : ComponentActivity() {
         // Room DB
         val database = CarOwnerDatabase.getInstance(applicationContext)
         // Repository
-        val repository = database?.let { AppRepository(it.carDao, it.ownerDao,db ) }
+      val repository = database?.let { AppRepository(it.carDao, it.ownerDao,db ) }
 //        // ViewModel Factory
         val viewModelFactory = repository?.let { ViewModelFactory(it) }
 //        // ViewModel
@@ -69,14 +69,14 @@ class CarsForOwner : ComponentActivity() {
 
             CarsOwnersAppTheme {
                 Scaffold(
-                    floatingActionButton = {
-                        FloatingActionButton(onClick = {
-                            showDialog = true
+                        floatingActionButton = {
+                            FloatingActionButton(onClick = {
+                                showDialog = true
 
-                        }) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Car")
+                            }) {
+                                Icon(Icons.Default.Add, contentDescription = "Add Car")
+                            }
                         }
-                    }
                 ) { innerPadding ->
                     Column(
                         modifier = Modifier
@@ -85,7 +85,7 @@ class CarsForOwner : ComponentActivity() {
                     ) {
 
                         var carsForOwner = myViewModel.getCarsForOwners(oid)
-                        //  var cars = carsForOwner?.ownedCars
+                    //  var cars = carsForOwner?.ownedCars
                         LazyColumn(
                             modifier = Modifier.weight(1f)
                         ) {

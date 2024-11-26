@@ -4,12 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageButton
-
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -42,65 +41,58 @@ import androidx.compose.ui.unit.dp
 import androidx.work.Constraints
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
-import com.example.carsownersapp.BackGroundTasks.LogAllOwners
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.example.carsownersapp.Room.Car
+import com.example.carsownersapp.logDataWorker.LogOwnersWorkers
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-
+import kotlin.collections.plus
 
 class MainActivity : ComponentActivity() {
+
     private lateinit var workManager : WorkManager
-
-    var names = emptyList<String>()
-    var ids = emptyList<Int>()
-    var years = emptyList<Int>()
-
-
+    var namesForLog = emptyList<String>()
+    var idsForLog = emptyList<Int>()
+    var yearsForLog = emptyList<Int>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        workManager =  WorkManager.getInstance(applicationContext)
-
+        workManager = WorkManager.getInstance(applicationContext)
 
        // val firebase =  FirebaseApp.initializeApp(this)
         val db = Firebase.firestore
-
-
         // Room DB
         val database = CarOwnerDatabase.getInstance(applicationContext)
-
         // Repository
         val repository = database?.let { AppRepository(it.carDao, it.ownerDao,db) }
-
         // ViewModel Factory
         val viewModelFactory = repository?.let { ViewModelFactory(it) }
-
         // ViewModel
         val myViewModel = ViewModelProvider(
             this,
             viewModelFactory!!
         )[CarsViewModel::class.java]
 
+
         enableEdgeToEdge()
         setContent {
-
         CarsOwnersAppTheme {
                 var showDialog by remember { mutableStateOf(false) }
                 var ownerslist by remember {  mutableStateOf(emptyList<Owner>()) }
-
                 Scaffold(
-
                     floatingActionButton = {
                         FloatingActionButton(onClick = {
                             showDialog = true
-
                         }) {
                             Icon(Icons.Default.Add, contentDescription = "Add Owner")
                         }
                     }
                 ) { innerPadding ->
                     ownerslist = myViewModel.getAllOwners()
+
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -111,23 +103,23 @@ class MainActivity : ComponentActivity() {
                         ) {
                             items(ownerslist.size) { index ->
                                 OwnerItem(owner = ownerslist[index],
-                                    ondelete = {id ->
-                                    myViewModel.deleteOwner(id)
-                                       // ownerslist = myViewModel.getAllOwners()
-                                })
+                                    ondelete = { id ->
+                                            myViewModel.deleteOwner(id)
+                                            myViewModel.deleteFromCloudDB(id)
+                                    })
                             }
                         }
                     }
                     if (showDialog) {
                         AddOwnerAlertDialog(
                             onSave = { name, year ->
-
-                                names += name
-                                years += year.toInt()
-                                var id = Math.random() * 1000
-                                ids += id.toInt()
+                                namesForLog += name
+                                var id = Math.random()*1000
+                                idsForLog += id.toInt()
+                                yearsForLog += year.toInt()
 
                                 myViewModel.addOnwer(Owner(id.toInt(),name,year.toInt()))
+
                                 showDialog = false
                             },
                             onCancel = { showDialog = false }
@@ -169,6 +161,26 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onPause() {
+        super.onPause()
+        var request = OneTimeWorkRequestBuilder<LogOwnersWorkers>().
+        setInputData(
+            workDataOf(
+                "names" to  namesForLog.toTypedArray(),
+                "years" to yearsForLog.toTypedArray(),
+                "ids" to idsForLog.toTypedArray()
+        )).setConstraints(Constraints(
+           requiredNetworkType = NetworkType.CONNECTED)
+        ).build()
+        workManager.enqueue(request)
+
+        namesForLog = emptyList()
+        yearsForLog = emptyList()
+        idsForLog = emptyList()
+    }
+
+
 
 
     @Composable
@@ -216,20 +228,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         )
-    }
-
-    override fun onPause() {
-        super.onPause()
-
-        var reques = OneTimeWorkRequestBuilder<LogAllOwners>().setInputData(workDataOf(
-            "names" to names.toTypedArray(),
-            "ids" to ids.toTypedArray(),
-            "years" to years.toTypedArray()
-        )).setConstraints(
-            Constraints(requiredNetworkType = NetworkType.CONNECTED,
-                requiresBatteryNotLow = true)).build()
-
-        WorkManager.getInstance(this).enqueue(reques)
     }
     }
 
