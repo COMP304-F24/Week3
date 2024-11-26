@@ -4,11 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageButton
+
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -38,6 +39,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import com.example.carsownersapp.BackGroundTasks.LogAllOwners
 import com.example.carsownersapp.Room.Car
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.ktx.firestore
@@ -45,8 +50,17 @@ import com.google.firebase.ktx.Firebase
 
 
 class MainActivity : ComponentActivity() {
+    private lateinit var workManager : WorkManager
+
+    var names = emptyList<String>()
+    var ids = emptyList<Int>()
+    var years = emptyList<Int>()
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        workManager =  WorkManager.getInstance(applicationContext)
 
 
        // val firebase =  FirebaseApp.initializeApp(this)
@@ -107,8 +121,13 @@ class MainActivity : ComponentActivity() {
                     if (showDialog) {
                         AddOwnerAlertDialog(
                             onSave = { name, year ->
-                                myViewModel.addOnwer(Owner(Math.random().toInt(),name,year.toInt()))
-                                myViewModel.addOwnerTOCloudDB(Owner(Math.random().toInt(),name,year.toInt()))
+
+                                names += name
+                                years += year.toInt()
+                                var id = Math.random() * 1000
+                                ids += id.toInt()
+
+                                myViewModel.addOnwer(Owner(id.toInt(),name,year.toInt()))
                                 showDialog = false
                             },
                             onCancel = { showDialog = false }
@@ -190,12 +209,27 @@ class MainActivity : ComponentActivity() {
                     Text("Save")
                 }
             },
+
             dismissButton = {
                 Button(onClick = onCancel) {
                     Text("Cancel")
                 }
             }
         )
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        var reques = OneTimeWorkRequestBuilder<LogAllOwners>().setInputData(workDataOf(
+            "names" to names.toTypedArray(),
+            "ids" to ids.toTypedArray(),
+            "years" to years.toTypedArray()
+        )).setConstraints(
+            Constraints(requiredNetworkType = NetworkType.CONNECTED,
+                requiresBatteryNotLow = true)).build()
+
+        WorkManager.getInstance(this).enqueue(reques)
     }
     }
 

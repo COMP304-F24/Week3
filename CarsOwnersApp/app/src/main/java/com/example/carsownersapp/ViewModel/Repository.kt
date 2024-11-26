@@ -45,7 +45,6 @@ class AppRepository(private val carsDAO: CarsDAO,
             "YOB" to o.yearOfBirth,
             "oID" to o.oid,
         )
-
 // Add a new document with a generated ID
         firebaseDB.collection("OwnersCollection")
             .add(owner)

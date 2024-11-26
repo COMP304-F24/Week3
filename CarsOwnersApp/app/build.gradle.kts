@@ -52,6 +52,9 @@ android {
 }
 
 dependencies {
+    val work_version = "2.9.1"
+    implementation("androidx.work:work-runtime-ktx:$work_version")
+
     val room_version = "2.6.1"
     implementation("androidx.room:room-runtime:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
